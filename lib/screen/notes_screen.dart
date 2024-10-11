@@ -24,8 +24,8 @@ class _NotesScreenState extends State<NotesScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: IconButton(
-              color: Colors.green,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
               onPressed: () async {
                 await collectionRef.add({
                   "title": titleController.text,
@@ -33,9 +33,8 @@ class _NotesScreenState extends State<NotesScreen> {
                 });
                 Navigator.pop(context);
               },
-              icon: const Icon(
-                Icons.verified_user_outlined,
-                size: 30,
+              child:  Text(
+                "Save" , style: mTextStyle22(fontWeight: FontWeight.bold , fontColor: Colors.white),
               ),
             ),
           )
