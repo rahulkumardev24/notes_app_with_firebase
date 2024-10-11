@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:notesf/screen/auth_screen/login_screen.dart';
+import 'package:notesf/screen/auth_screen/register_screen.dart';
 import 'package:notesf/screen/home_screen.dart';
 import 'package:notesf/screen/notes_screen.dart';
 
@@ -26,7 +28,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeScreen()
+      home: RegisterScreen()
+
     );
   }
 }
