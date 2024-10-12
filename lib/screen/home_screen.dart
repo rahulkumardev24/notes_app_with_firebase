@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notesf/screen/notes_screen.dart';
+import 'package:notesf/screen/profile_screen.dart';
 import 'package:notesf/screen/update_screen.dart';
 import '../constrant/customTextStyle.dart';
 
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           "Notes",
           style: mTextStyle28(fontWeight: FontWeight.bold),
         ),
-        actions: const [
+        actions:  [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: Icon(
@@ -41,6 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 30,
             ),
           ),
+
+          IconButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context)=> ProfileScreen())) ;
+          }, icon: const Icon(Icons.account_circle))
         ],
       ),
 

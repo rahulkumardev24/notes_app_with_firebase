@@ -13,6 +13,16 @@ class UserModel {
     required this.number,
   });
 
+
+
+
+  factory UserModel.FromDoc(Map<String, dynamic> doc) => UserModel(
+      name: doc['name'],
+      number: doc['number'],
+      email: doc['email'],
+      gender: doc['gender'],
+      age: doc['age']);
+
   Map<String, dynamic> toDoc() {
     return {
       'name': name,

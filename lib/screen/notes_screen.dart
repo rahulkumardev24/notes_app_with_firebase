@@ -16,7 +16,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
   FirebaseFirestore fireBaseStore = FirebaseFirestore.instance;
 
-
   @override
   Widget build(BuildContext context) {
     var collectionRef = fireBaseStore.collection("notes");
@@ -25,7 +24,7 @@ class _NotesScreenState extends State<NotesScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child:  ElevatedButton(
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orangeAccent),
               onPressed: () async {
@@ -41,7 +40,8 @@ class _NotesScreenState extends State<NotesScreen> {
                     "uid": uid,
                     "title": titleController.text,
                     "description": subTitleController.text,
-                    "timestamp": FieldValue.serverTimestamp() // Add timestamp for sorting
+                    "timestamp": FieldValue
+                        .serverTimestamp() // Add timestamp for sorting
                   });
 
                   /// Clear the text fields after saving
@@ -53,8 +53,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 } else {
                   // Handle case when user is not logged in
                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("User not logged in"))
-                  );
+                      SnackBar(content: Text("User not logged in")));
                 }
               },
               child: Text(
