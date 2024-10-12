@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notesf/constrant/customTextStyle.dart';
 
@@ -16,6 +16,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   FirebaseFirestore fireBaseStore = FirebaseFirestore.instance;
 
+
   @override
   Widget build(BuildContext context) {
     var collectionRef = fireBaseStore.collection("notes");
@@ -24,17 +25,42 @@ class _NotesScreenState extends State<NotesScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+            child:  ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent),
               onPressed: () async {
-                await collectionRef.add({
-                  "title": titleController.text,
-                  "description": subTitleController.text
-                });
-                Navigator.pop(context);
+                /// Get the current user
+                FirebaseAuth auth = FirebaseAuth.instance;
+                User? user = auth.currentUser;
+
+                if (user != null) {
+                  String uid = user.uid; // Get the current user's UID
+
+                  /// Save the note with the user's UID
+                  await collectionRef.add({
+                    "uid": uid,
+                    "title": titleController.text,
+                    "description": subTitleController.text,
+                    "timestamp": FieldValue.serverTimestamp() // Add timestamp for sorting
+                  });
+
+                  /// Clear the text fields after saving
+                  titleController.clear();
+                  subTitleController.clear();
+
+                  /// Go back after saving
+                  Navigator.pop(context);
+                } else {
+                  // Handle case when user is not logged in
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("User not logged in"))
+                  );
+                }
               },
-              child:  Text(
-                "Save" , style: mTextStyle22(fontWeight: FontWeight.bold , fontColor: Colors.white),
+              child: Text(
+                "Save",
+                style: mTextStyle22(
+                    fontWeight: FontWeight.bold, fontColor: Colors.white),
               ),
             ),
           )

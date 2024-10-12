@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:notesf/constrant/customTextStyle.dart';
+import 'package:notesf/model/user_model.dart';
 import 'package:notesf/screen/auth_screen/login_screen.dart';
 import 'package:notesf/widgets/custom_button.dart';
 import 'package:notesf/widgets/custom_text_field.dart';
@@ -12,17 +16,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController numberController = TextEditingController();
-  TextEditingController genderController = TextEditingController() ;
-  TextEditingController ageController  = TextEditingController() ;
-  TextEditingController nameController  = TextEditingController() ;
+  TextEditingController genderController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
 
   MediaQueryData? mqData;
-
   @override
   Widget build(BuildContext context) {
     mqData = MediaQuery.of(context);
     return Scaffold(
-      body: SingleChildScrollView(  // Added SingleChildScrollView for scrolling
+      body: SingleChildScrollView(
+        // Added SingleChildScrollView for scrolling
         child: Center(
           child: Stack(
             alignment: Alignment.center,
@@ -30,7 +34,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Opacity(
                 opacity: 1,
                 child: Image.asset(
-                  height: mqData!.size.height,  // Ensure the image covers full height
+                  height: mqData!
+                      .size.height, // Ensure the image covers full height
                   width: double.infinity,
                   fit: BoxFit.cover,
                   "assets/background not.webp",
@@ -46,11 +51,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 20,),
+                    const SizedBox(
+                      height: 20,
+                    ),
+
                     /// -----------------Heading text ----------------------- ///
-                    const Text(
+                    Text(
                       "Create Your Account",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                      style: mTextStyle28(
+                          fontColor: Colors.white, fontWeight: FontWeight.bold),
                     ),
 
                     /// ----------------------Top box---------------------------///
@@ -60,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         padding: const EdgeInsets.all(10.0),
                         child: Container(
                           width: mqData!.size.width,
-                          height: mqData!.size.height*0.6,
+                          height: mqData!.size.height * 0.62,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
                             color: const Color(0xe7a0bfff),
@@ -82,6 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         prefixIcon: Icons.person,
                                       ),
                                     ),
+
                                     /// password box
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -89,10 +99,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         controller: emailController,
                                         label: "email",
                                         hintText: "Enter email",
-                                        sufficeIcon: Icons.account_circle_outlined,
+                                        sufficeIcon:
+                                            Icons.account_circle_outlined,
                                         prefixIcon: Icons.email_outlined,
                                       ),
                                     ),
+
                                     /// number
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -104,6 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         prefixIcon: Icons.phone_android,
                                       ),
                                     ),
+
                                     /// gender
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -114,6 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         prefixIcon: Icons.man,
                                       ),
                                     ),
+
                                     /// age
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -135,17 +149,80 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                     ),
                                     const SizedBox(
-                                      height: 60,
+                                      height: 70,
                                     )
                                   ],
                                 ),
 
-                                /// -------------Arrow button------------------///
+                                /// ----Register Button ---------Arrow button------------------///
                                 Positioned(
                                   bottom: 10,
                                   right: 10,
                                   child: FloatingActionButton(
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      var name = nameController.text.trim();
+                                      var email = emailController.text.trim();
+                                      var number = numberController.text.trim();
+                                      var age = int.tryParse(
+                                              ageController.text.trim()) ??
+                                          0; // Safely parse age
+                                      var gender = genderController.text.trim();
+                                      var pass = passwordController.text.trim();
+
+                                      var auth = FirebaseAuth.instance;
+                                      try {
+                                        // Create user with Firebase Authentication
+                                        var userCredential = await auth
+                                            .createUserWithEmailAndPassword(
+                                          email: email,
+                                          password: pass,
+                                        );
+
+                                        if (userCredential.user != null) {
+                                          // User is successfully created
+                                          print(
+                                              'User created! UID: ${userCredential.user!.uid}');
+
+                                          // Prepare Firestore instance
+                                          var fireStore =
+                                              FirebaseFirestore.instance;
+                                          var collectionRef =
+                                              fireStore.collection("users");
+
+                                          // Create UserModel object with user details and initialize notes
+                                          var userModel = UserModel(
+                                            name: name,
+                                            number: number,
+                                            email: email,
+                                            gender: gender,
+                                            age: age,
+                                          );
+
+                                          // Store user details in Firestore under 'users' collection
+                                          await collectionRef
+                                              .doc(userCredential.user!.uid)
+                                              .set(userModel.toDoc());
+
+                                          print(
+                                              'User details added to Firestore!');
+
+                                          // Navigate to login or home screen
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginScreen()),
+                                          );
+                                        } else {
+                                          print("User creation failed!");
+                                        }
+                                      } on FirebaseAuthException catch (e) {
+                                        // Handle FirebaseAuth errors
+                                        print("Error: ${e.message}");
+                                      } catch (e) {
+                                        print(e);
+                                      }
+                                    },
                                     backgroundColor: Colors.orangeAccent,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
@@ -155,7 +232,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       Icons.arrow_forward,
                                       size: 30,
                                       shadows: [
-                                        Shadow(color: Colors.black, blurRadius: 4)
+                                        Shadow(
+                                            color: Colors.black, blurRadius: 4)
                                       ],
                                     ),
                                   ),
@@ -197,10 +275,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 SizedBox(
                                   width: mqData!.size.width * 0.7,
                                   height: mqData!.size.height * 0.05,
-                                  child: CustomButton(text: "Sign up", onPress: () {
-                                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-
-                                  }),
+                                  child: CustomButton(
+                                      text: "Login",
+                                      onPress: () {
+                                        Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginScreen()));
+                                      }),
                                 ),
                               ],
                             ),

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notesf/screen/notes_screen.dart';
 import 'package:notesf/screen/update_screen.dart';
@@ -16,7 +17,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var collectionRef = fireBaseStore.collection("notes");
+
+    /// current user
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? user = auth.currentUser;
+
+
+    // Get the collection reference with the user's notes
+    var collectionRef = fireBaseStore
+        .collection("notes")
+        .where("uid", isEqualTo: user!.uid);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -88,9 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           direction: DismissDirection.horizontal,
                           onDismissed: (direction) async {
-                            await collectionRef
-                                .doc(snapShot.data!.docs[index].id)
-                                .delete();
+                            await snapShot.data!.docs[index].reference.delete();
                           },
                           child: Card(
                             elevation: 4,
@@ -98,18 +106,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: ListTile(
                               onTap: () {
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => UpdateScreen(
-                                            title: noteData['title'],
-                                            description: noteData['description'],
-                                            docId: snapShot.data!.docs[index].id)));
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => UpdateScreen(
+                                      title: noteData['title'],
+                                      description: noteData['description'],
+                                      docId: snapShot.data!.docs[index].id,
+                                    ),
+                                  ),
+                                );
                               },
                               title: Text(noteData['title']),
                               subtitle: Text(noteData['description']),
                             ),
                           ),
                         );
+
                       },
                     )
                   : const Center(
