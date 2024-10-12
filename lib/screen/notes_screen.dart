@@ -13,7 +13,6 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   TextEditingController titleController = TextEditingController();
   TextEditingController subTitleController = TextEditingController();
-
   FirebaseFirestore fireBaseStore = FirebaseFirestore.instance;
 
   @override

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +10,6 @@ import 'package:notesf/constrant/customTextStyle.dart';
 import 'package:notesf/model/user_model.dart';
 
 class ProfileScreen extends StatefulWidget {
-  // Change to StatefulWidget to manage state
   const ProfileScreen({super.key});
 
   @override
@@ -33,11 +33,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
-          if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text("User data not found"));
+
+          if (!snapshot.hasData) {
+            return const Center(child: Text("User data not available"));
           }
 
           UserModel user = snapshot.data!;
@@ -55,15 +53,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: mqData!.size.width * 0.8,
                         height: mqData!.size.width * 0.8, // Adjusted height
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                              100), // Optional: make it circular
+                          borderRadius: BorderRadius.circular(100),
                           image: DecorationImage(
                             image: pickedFile != null
                                 ? FileImage(pickedFile!)
-                                : const AssetImage("assets/user (1).png")
-                                    as ImageProvider, // Default image
-                            fit: BoxFit
-                                .cover, // Make the image cover the container
+                                : (user.profilePic != null
+                                        ? NetworkImage(user.profilePic!)
+                                        : const AssetImage(
+                                            "assets/user (1).png"))
+                                    as ImageProvider<
+                                        Object>, // No casting needed
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -89,6 +89,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 setState(() {
                                   pickedFile = File(cropFile.path);
                                 });
+
+                                // Upload the file to Firebase Storage
+                                var storage = FirebaseStorage.instance;
+                                var storageRef = storage.ref();
+                                var profilePicRef = storageRef.child(
+                                    "images/profile_pic/IMG${DateTime.now().millisecondsSinceEpoch}.jpg");
+
+                                // Upload the file
+                                await profilePicRef.putFile(pickedFile!);
+
+                                // Get the download URL
+                                String actualUrl =
+                                    await profilePicRef.getDownloadURL();
+
+                                // Update the user's profile picture URL in Firestore
+                                User? currentUser =
+                                    FirebaseAuth.instance.currentUser;
+                                if (currentUser != null) {
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(currentUser.uid)
+                                      .update({
+                                    'profilePic': actualUrl,
+                                  });
+                                }
+
+                                // Print the actual URL (optional for debugging)
+                                print("Profile picture URL: $actualUrl");
                               }
                             }
                           },
